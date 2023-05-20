@@ -67,5 +67,11 @@ def main():
             st.subheader(f"Objects Detected ({object_count} objects)")
             st.image(output_image, channels="BGR")
 
+    # Information about the developer and GitHub repository
+    st.subheader("About the Developer")
+    st.write("This application was developed by Damien SOULÉ.")
+    st.write("You can find the GitHub repository for this project [here](https://github.com/dspydev/object-detection-streamlit).")
+    st.write("You can also follow Damien SOULÉ on [LinkedIn](https://www.linkedin.com/in/damiensoule/).")
+
 if __name__ == "__main__":
     main()
