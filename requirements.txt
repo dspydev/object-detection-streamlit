@@ -1,6 +1,6 @@
-streamlit==1.1.0 
-opencv-python==4.5.4.58 
-numpy==1.21.2 
-cvlib==0.2.6 
-pillow==8.3.2 
-tensorflow==2.6.0
+streamlit
+opencv-python
+numpy
+cvlib
+pillow
+tensorflow
