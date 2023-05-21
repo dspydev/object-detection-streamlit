@@ -19,7 +19,7 @@ This project offers the following features:
 
 # How to Use
 
-You can see a live demo of the project in action here: [dspydev-object-detection.streamlit.app](dspydev-object-detection.streamlit.app)
+You can see a live demo of the project in action here: [dspydev-object-detection.streamlit.app](https://dspydev-object-detection.streamlit.app/)
 
 # Future Improvements
 
