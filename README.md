@@ -6,7 +6,7 @@ Welcome to the Object Detection Streamlit project. This project uses Streamlit, 
 
 The project contains the following main files:
 
-- **object_detection_app.py**: This is the main Python script that powers the application. It contains the code for the Streamlit interface and the object detection logic.
+- **object_detection.py**: This is the main Python script that powers the application. It contains the code for the Streamlit interface and the object detection logic.
 - **requirements.txt**: This file lists the Python dependencies that you need to run the application.
 - **apt.txt**: This file contains a list of system-level packages required for the application.
 
@@ -19,7 +19,7 @@ This project offers the following features:
 
 # How to Use
 
-You can see a live demo of the project in action here: [dspydev-object-detection.streamlit.app](https://dspydev-object-detection.streamlit.app/)
+You can see a live demo of the project in action here: [object-detection-yolo.streamlit.app](https://object-detection-yolo.streamlit.app/)
 
 # Future Improvements
 
