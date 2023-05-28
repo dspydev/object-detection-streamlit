@@ -40,7 +40,7 @@ def main():
     st.subheader("About Object Detection Models")
     st.write("This application allows you to choose between two state-of-the-art object detection models: YOLOv8 and YOLO-NAS.")
     
-    st.write("YOLOv8 is a state-of-the-art object detection model that offers high accuracy and fast performance. It is an improvement over previous versions of YOLO in terms of accuracy and speed. You can learn more about YOLOv8 and its capabilities on the [Ultralytics website](https://ultralytics.com/yolov5).")
+    st.write("YOLOv8 is a state-of-the-art object detection model that offers high accuracy and fast performance. It is an improvement over previous versions of YOLO in terms of accuracy and speed. You can learn more about YOLOv8 and its capabilities on the [Ultralytics website](https://ultralytics.com/yolov8).")
     
     st.write("YOLO-NAS is a state-of-the-art object detection model that offers high accuracy and fast performance. It outperforms both YOLOv6 & YOLOv8 models in terms of mAP (mean average precision) and inference latency. You can learn more about YOLO-NAS and its capabilities on the [Deci.ai website](https://deci.ai).")
 
