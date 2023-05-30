@@ -1,181 +1,141 @@
 import streamlit as st
-import cv2
 import numpy as np
-import cvlib as cv
-from cvlib.object_detection import draw_bbox
+import cv2
 from PIL import Image
-import requests
-from urllib.parse import urlparse
+from ultralytics import YOLO
 
-# Detect objects in the image with the specified confidence level using the specified model
-def object_detection(image, confidence, model):
-    # Convert image to float32 before creating blob
-    image = image.astype(np.float32)
-    
-    # Perform object detection using the specified model
-    bbox, label, conf = cv.detect_common_objects(image, model=model, confidence=confidence)
-    return bbox, label, conf
+st.title("Object Detection with YOLOv8")
 
-def is_valid_url(url):
-    try:
-        result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except ValueError:
-        return False
+# Summary of Steps
+st.header("Summary of Steps")
+st.write("1. Import an image using the 'Browse Files' button.")
+st.write("2. Adjust the confidence threshold and bounding box thickness using the sliders.")
+st.write("3. Select the YOLOv8 model using the radio buttons.")
+st.write("4. Click on the 'Detect' button to run object detection on the imported image.")
 
-def main():
-    st.title("Object Detection App")
-    st.write("Welcome to the Object Detection App! Here are the steps to use the app:")
+# Step 1: Import an Image
+st.header("Step 1: Import an Image")
+st.write("Click on the 'Browse Files' button to import an image from your computer.")
 
-    # Summary of steps
-    st.subheader("Summary of Steps")
-    st.markdown("""
-    1. Upload an image or enter an image URL.
-    2. Choose an object detection model.
-    3. Adjust the confidence level.
-    4. Detect objects in the image.
-    """)
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Original Image")
+    image = np.array(image)
 
-    # Information about object detection models
-    st.subheader("About Object Detection Models")
-    st.write("This application allows you to choose between two state-of-the-art object detection models: YOLOv8 and YOLO-NAS.")
-    
-    st.write("YOLOv8 is a state-of-the-art object detection model that offers high accuracy and fast performance. It is an improvement over previous versions of YOLO in terms of accuracy and speed. You can learn more about YOLOv8 and its capabilities on the [Ultralytics website](https://ultralytics.com/yolov8).")
-    
-    st.write("YOLO-NAS is a state-of-the-art object detection model that offers high accuracy and fast performance. It outperforms both YOLOv6 & YOLOv8 models in terms of mAP (mean average precision) and inference latency. You can learn more about YOLO-NAS and its capabilities on the [Deci.ai website](https://deci.ai).")
+# Step 2: Adjust the Parameters
+st.header("Step 2: Adjust the Parameters")
+st.write("Use the sliders below to adjust the confidence threshold and bounding box thickness for object detection.")
+st.write("- The 'Confidence threshold' slider allows you to adjust the confidence threshold for object detection. The higher the value, the fewer objects will be detected but with higher accuracy.")
+st.write("- The 'Bounding box thickness' slider allows you to adjust the thickness of the bounding boxes around detected objects.")
 
-    # Step 1: Upload image file or enter image URL
-    st.subheader("Step 1: Upload Image or Enter Image URL")
-    uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
-    
-    image_url = st.text_input('Or enter an image URL')
-    
-    if uploaded_file is not None:
-        # Read uploaded image
-        image = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), cv2.IMREAD_COLOR)
+# define some parameters
+CONFIDENCE = st.slider("Confidence threshold", 0.0, 1.0, 0.5)
+font_scale = 1
+thickness = st.slider("Bounding box thickness", 1, 10, 2)
 
-        # Display original image
-        st.subheader("Original Image")
-        st.image(image, channels="BGR")
+# Step 3: Select the Model
+st.header("Step 3: Select the Model")
+st.write("Use the radio buttons below to select the YOLOv8 model you want to use for object detection.")
 
-        # Step 2: Choose object detection model
-        st.subheader("Step 2: Choose Object Detection Model")
-        model_options = ["YOLOv8", "YOLO-NAS"]
-        model_choice = st.selectbox(
-            "Object Detection Model",
-            model_options,
-            help="Choose an object detection model to use."
-        )
+# add radio buttons for selecting the model
+model_options = ["yolov8n.pt", "yolov8s.pt", "yolov8m.pt"]
+model_selection = st.radio("Select model:", model_options)
+model = YOLO(model_selection)
 
-        # Step 3: Confidence level options with explanation
-        st.subheader("Step 3: Adjust Confidence Level")
-        st.markdown(
-            """
-            The Confidence Level determines the threshold for object detection. It controls the certainty required for an object to be detected. 
-            Choose an option or enter a custom value to adjust the accuracy of object detection. Higher values may result in fewer detections but with higher accuracy.
-            """
-        )
-        confidence_options = ["Low (0.3)", "Medium (0.5)", "High (0.7)", "Custom"]
-        confidence_choice = st.selectbox(
-            "Confidence Level",
-            confidence_options,
-            help="Choose an option or enter a custom value to adjust the confidence level for object detection."
-        )
-        if confidence_choice == "Custom":
-            confidence = st.number_input(
-                "Custom Confidence Level",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.5,
-                step=0.01,
-                help="Enter a custom value for the confidence level for object detection."
-            )
-        else:
-            confidence = float(confidence_choice.split()[1][1:-1])
+st.subheader("Model Differences")
+st.write("- `yolov8n.pt`: This is the default YOLOv8 model that provides a good balance between speed and accuracy.")
+st.write("- `yolov8s.pt`: This is a smaller version of the YOLOv8 model that is faster but less accurate than the default model.")
+st.write("- `yolov8m.pt`: This is a larger version of the YOLOv8 model that is more accurate but slower than the default model.")
 
-        if st.button("Detect Objects"):
-            # Perform object detection with bounding boxes using the chosen model
-            output = object_detection(image, confidence, model=model_choice.lower())
+# Step 4: Run Object Detection
+st.header("Step 4: Run Object Detection")
+st.write("Click on the 'Detect' button to run object detection on the imported image.")
 
-            # Draw rectangular bounding boxes around the detected objects
-            output_image = draw_bbox(image.copy(), output[0], output[1], output[2])
+if st.button("Detect"):
+    # run inference on the image 
+    # see: https://docs.ultralytics.com/modes/predict/#arguments for full list of arguments
+    results = model.predict(image, conf=CONFIDENCE)[0]
 
-            # Count the number of objects
-            object_count = len(output[1])
+    # loop over the detections
+    for data in results.boxes.data.tolist():
+        # get the bounding box coordinates, confidence, and class id 
+        xmin, ymin, xmax, ymax, confidence, class_id = data
+        # converting the coordinates and the class id to integers
+        xmin = int(xmin)
+        ymin = int(ymin)
+        xmax = int(xmax)
+        ymax = int(ymax)
+        class_id = int(class_id)
 
-            # Display image with detected objects
-            st.subheader(f"Objects Detected ({object_count} objects)")
-            st.image(output_image, channels="BGR")
-            
-    elif is_valid_url(image_url):
-        try:
-            response = requests.get(image_url)
-            response.raise_for_status()
-            
-            arr = np.asarray(bytearray(response.content), dtype=np.uint8)
-            img = cv2.imdecode(arr, -1)
-            
-            # Display original image
-            st.subheader("Original Image")
-            st.image(img, channels="BGR")
+        # draw a bounding box rectangle and label on the image
+        color = [int(c) for c in np.random.randint(0,
+                                                   255,
+                                                   size=(3,),
+                                                   dtype="uint8")]
+        cv2.rectangle(image,
+                      (xmin,
+                       ymin),
+                      (xmax,
+                       ymax),
+                      color=color,
+                      thickness=thickness)
+        text = f"{confidence:.2f}"
+        # calculate text width & height to draw the transparent boxes as background of the text
+        (text_width,
+         text_height) = cv2.getTextSize(text,
+                                        cv2.FONT_HERSHEY_SIMPLEX,
+                                        fontScale=font_scale,
+                                        thickness=thickness)[0]
+        text_offset_x = xmin
+        text_offset_y = ymin - 5
+        box_coords = ((text_offset_x,
+                       text_offset_y),
+                      (text_offset_x + text_width + 2,
+                       text_offset_y - text_height))
+        overlay = image.copy()
+        cv2.rectangle(overlay,
+                      box_coords[0],
+                      box_coords[1],
+                      color=color,
+                      thickness=cv2.FILLED)
+        # add opacity (transparency to the box)
+        image = cv2.addWeighted(overlay,
+                                0.6,
+                                image,
+                                0.4,
+                                0)
+        # now put the text (label: confidence %)
+        cv2.putText(image,
+                    text,
+                    (xmin,
+                     ymin - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=font_scale,
+                    color=(0,
+                           0,
+                           0),
+                    thickness=thickness)
 
-            # Step 2: Choose object detection model
-            st.subheader("Step 2: Choose Object Detection Model")
-            model_options = ["YOLOv8", "YOLO-NAS"]
-            model_choice = st.selectbox(
-                "Object Detection Model",
-                model_options,
-                help="Choose an object detection model to use."
-            )
+    st.image(image)
+    st.write(f"Number of objects detected: {len(results.boxes.data.tolist())}")
 
-            # Step 3: Confidence level options with explanation
-            st.subheader("Step 3: Adjust Confidence Level")
-            st.markdown(
-                """
-                The Confidence Level determines the threshold for object detection. It controls the certainty required for an object to be detected. 
-                Choose an option or enter a custom value to adjust the accuracy of object detection. Higher values may result in fewer detections but with higher accuracy.
-                """
-            )
-            confidence_options = ["Low (0.3)", "Medium (0.5)", "High (0.7)", "Custom"]
-            confidence_choice = st.selectbox(
-                "Confidence Level",
-                confidence_options,
-                help="Choose an option or enter a custom value to adjust the confidence level for object detection."
-            )
-            if confidence_choice == "Custom":
-                confidence = st.number_input(
-                    "Custom Confidence Level",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.5,
-                    step=0.01,
-                    help="Enter a custom value for the confidence level for object detection."
-                )
-            else:
-                confidence = float(confidence_choice.split()[1][1:-1])
+st.info(f"""
+**About Yolov8**
 
-            if st.button("Detect Objects"):
-                # Perform object detection with bounding boxes using the chosen model
-                output = object_detection(img, confidence, model=model_choice.lower())
+**What is Yolov8?**
+Yolov8 is an object detection model that offers advantages over older models in terms of speed and accuracy.
 
-                # Draw rectangular bounding boxes around the detected objects
-                output_image = draw_bbox(img.copy(), output[0], output[1], output[2])
+**Advantages of Yolov8:**
+- Fast and accurate object detection in real-time.
 
-                # Count the number of objects
-                object_count = len(output[1])
+**Real-world use cases for Yolov8:**
+- Suitable for applications such as autonomous driving, surveillance systems, and robotics.
+- Can be used for tasks such as object tracking and counting.
 
-                # Display image with detected objects
-                st.subheader(f"Objects Detected ({object_count} objects)")
-                st.image(output_image, channels="BGR")
-                
-        except requests.exceptions.RequestException as e:
-            raise SystemExit(e)
-        
-    # Information about the developer and GitHub repository
-    st.subheader("About the Developer")
-    st.write("This application was developed by Damien SOULÉ.")
-    st.write("You can find the GitHub repository for this project [here](https://github.com/dspydev/object-detection-streamlit).")
-    st.write("You can also follow Damien SOULÉ on [LinkedIn](https://www.linkedin.com/in/damiensoule/).")
-    
-if __name__ == "__main__":
-    main()
+**Limitations of this Streamlit application:**
+- This Streamlit application is very limited in terms of functionality and accuracy due to Streamlit's memory consumption limitations.
+- It is only a prototype that can be significantly improved and deployed on other appropriate platforms such as Azure, AWS or Google Cloud Platform.
+
+[Learn more about YOLOv8](https://ultralytics.com/yolov8)
+""")
