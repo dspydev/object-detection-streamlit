@@ -83,7 +83,7 @@ if st.button("Detect"):
                        outline=color,
                        width=thickness)
         text = f"{confidence:.2f}"
-        font = ImageFont.truetype("arial.ttf", size=16)
+        font = ImageFont.load_default()
         text_width, text_height = draw.textsize(text, font=font)
         text_offset_x = xmin
         text_offset_y = ymin - text_height - 5
