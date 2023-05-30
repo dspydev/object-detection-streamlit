@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
-import cv2
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
 st.title("Object Detection with YOLOv8")
@@ -57,6 +56,12 @@ if st.button("Detect"):
     # see: https://docs.ultralytics.com/modes/predict/#arguments for full list of arguments
     results = model.predict(image, conf=CONFIDENCE)[0]
 
+    # create a PIL Image object from the numpy array
+    image = Image.fromarray(image)
+
+    # create a Draw object to draw on the image
+    draw = ImageDraw.Draw(image)
+
     # loop over the detections
     for data in results.boxes.data.tolist():
         # get the bounding box coordinates, confidence, and class id 
@@ -69,53 +74,30 @@ if st.button("Detect"):
         class_id = int(class_id)
 
         # draw a bounding box rectangle and label on the image
-        color = [int(c) for c in np.random.randint(0,
-                                                   255,
-                                                   size=(3,),
-                                                   dtype="uint8")]
-        cv2.rectangle(image,
-                      (xmin,
-                       ymin),
-                      (xmax,
-                       ymax),
-                      color=color,
-                      thickness=thickness)
+        color = tuple([int(c) for c in np.random.randint(0,
+                                                         255,
+                                                         size=(3,),
+                                                         dtype="uint8")])
+        draw.rectangle(((xmin, ymin), (xmax, ymax)),
+                       outline=color,
+                       width=thickness)
         text = f"{confidence:.2f}"
-        # calculate text width & height to draw the transparent boxes as background of the text
-        (text_width,
-         text_height) = cv2.getTextSize(text,
-                                        cv2.FONT_HERSHEY_SIMPLEX,
-                                        fontScale=font_scale,
-                                        thickness=thickness)[0]
+        font = ImageFont.truetype("arial.ttf", size=16)
+        text_width, text_height = draw.textsize(text, font=font)
         text_offset_x = xmin
-        text_offset_y = ymin - 5
-        box_coords = ((text_offset_x,
-                       text_offset_y),
-                      (text_offset_x + text_width + 2,
-                       text_offset_y - text_height))
-        overlay = image.copy()
-        cv2.rectangle(overlay,
-                      box_coords[0],
-                      box_coords[1],
-                      color=color,
-                      thickness=cv2.FILLED)
-        # add opacity (transparency to the box)
-        image = cv2.addWeighted(overlay,
-                                0.6,
-                                image,
-                                0.4,
-                                0)
-        # now put the text (label: confidence %)
-        cv2.putText(image,
-                    text,
-                    (xmin,
-                     ymin - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=font_scale,
-                    color=(0,
-                           0,
-                           0),
-                    thickness=thickness)
+        text_offset_y = ymin - text_height - 5
+        draw.rectangle(((text_offset_x,
+                         text_offset_y),
+                        (text_offset_x + text_width + 2,
+                         text_offset_y + text_height)),
+                       fill=color)
+        draw.text((text_offset_x,
+                   text_offset_y),
+                  text,
+                  fill=(0,
+                        0,
+                        0),
+                  font=font)
 
     st.image(image)
     st.write(f"Number of objects detected: {len(results.boxes.data.tolist())}")
