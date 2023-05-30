@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 import cv2
-from PIL import Image, ImageDraw, ImageFont
 from ultralytics import YOLO
 
 st.title("Object Detection with YOLOv8")
