@@ -8,7 +8,6 @@ The project contains the following main files:
 
 - **object_detection.py**: This is the main Python script that powers the application. It contains the code for the Streamlit interface and the object detection logic.
 - **requirements.txt**: This file lists the Python dependencies that you need to run the application.
-- **apt.txt**: This file contains a list of system-level packages required for the application.
 
 # Features
 
